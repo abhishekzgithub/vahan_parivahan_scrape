@@ -25,7 +25,7 @@ LOADING_ELEMENT_XPATH = '//*[@id="j_idt44_modal"]'
 FROM_DATE="//input[@id='id_fromDate_input']"
 UPTO_DATE="//input[@id='id_uptoDate_input']"
 
-#python scrape_vahan.py -f 2009-01-01 -t 2009-02-01
+#python scrape_vahan.py -f 2009-12-01 -t 2010-02-01
 
 all_regions = ['Total', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Chandigarh', 'Daman & Diu', 'Delhi', 'Dadra & Nagar Haveli', 'Goa', 'Gujarat', 'Himachal Pradesh', 'Haryana', 'Jharkhand', 'Jammu & Kashmir','Karnataka', 'Kerala', 'Maharashtra', 'Meghalaya', 'Manipur', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Puducherry', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Tripura', 'Uttrakhand', 'Uttar Pradesh', 'West Bengal']
 start_region=1
@@ -166,14 +166,14 @@ def read_delete_xls(start_day_month,end_date,region,office_text):
             logging.info("downloaded selected has been read for office"+office_text+"in"+region)
             new_df3["vehicle_class"]=df.iloc[:,1]
             new_df3["total"]=df.iloc[:,2]
-            os.remove(selected)
             logging.info("selected removed for "+office_text+region)
         elif(os.path.isfile(os.path.join(path_down,'tacPendingForApproval.xls'))):
             new_df3["vehicle_class"]=pd.Series([""])
             new_df3["total"]=pd.Series([""])
             selected=os.path.join(path_down,'tacPendingForApproval.xls')
-            os.remove(selected)
             logging.info("tacPendingForApproval removed for "+office_text+region)
+        os.remove(selected)       
+        time.sleep(0.2)
         new_df3["begining_date"]=start_day_month
         new_df3["end_date"]=end_date
         new_df3["region"]=region
@@ -220,8 +220,8 @@ def get_offices(new_df2,array,start_month,last_day,region):
         wait_for_loading(driver)
         # Run through pages
         df_state=read_delete_xls(start_month,last_day,region,office_text)
-        new_df2.append(df_state,ignore_index=True)
-        pdb.set_trace()
+        new_df2=new_df2.append(df_state,ignore_index=True)
+        del(df_state)
         #array=save_pagination_data(array,start_month,last_day,region,office_text)
     return new_df2
 
@@ -266,6 +266,7 @@ def main():
                 # --- GET OFFICES
                 array=get_offices(new_df,array,start_day_month,last_day_month,region_name)
                 logging.info("normal output is \n ",array)
+                pdb.set_trace()
                 # df = pd.DataFrame(array, columns = ['begining_date', 'end_date', 'region', 'type_of_vehicle','num_sold', 'office'])
                 array.to_excel(f'{start_day_month}_{last_day_month}.xlsx', index=False,sheet_name=region_name)
             if start_day_month.month == 12:
