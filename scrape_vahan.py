@@ -25,10 +25,11 @@ LOADING_ELEMENT_XPATH = '//*[@id="j_idt44_modal"]'
 FROM_DATE="//input[@id='id_fromDate_input']"
 UPTO_DATE="//input[@id='id_uptoDate_input']"
 
-all_regions = ['Total', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Chandigarh', 'Daman & Diu', 'Delhi', 'Dadra & Nagar Haveli', 'Goa', 'Gujarat', 'Himachal Pradesh', 'Haryana', 'Jharkhand', 'Jammu & Kashmir','Karnataka', 'Kerala', 'Maharashtra', 'Meghalaya', 'Manipur', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Puducherry', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Tripura', 'Uttrakhand', 'Uttar Pradesh', 'West Bengal']
 #python scrape_vahan.py -f 2009-01-01 -t 2009-02-01
+
+all_regions = ['Total', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Chandigarh', 'Daman & Diu', 'Delhi', 'Dadra & Nagar Haveli', 'Goa', 'Gujarat', 'Himachal Pradesh', 'Haryana', 'Jharkhand', 'Jammu & Kashmir','Karnataka', 'Kerala', 'Maharashtra', 'Meghalaya', 'Manipur', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Puducherry', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Tripura', 'Uttrakhand', 'Uttar Pradesh', 'West Bengal']
 start_region=1
-end_region=len(all_regions)-1
+end_region=1#len(all_regions)-1
 P_URL="https://vahan.parivahan.gov.in/vahan4dashboard/"
 driver=None
 
@@ -153,8 +154,35 @@ def save_pagination_data(array,start_month,last_day,region,office_text):
     finally:
         print("Final array is \n",array)
     return array
-            
-def get_offices(array,start_month,last_day,region):
+def read_delete_xls(start_day_month,end_date,region,office_text):
+    try:
+        new_df3=pd.DataFrame()
+        driver.find_element_by_xpath("//a[@id='datatableSelectionWise:csv']").click()#click on excel
+        time.sleep(0.2)
+        path_down=r'C:\Users\abhis11x\Downloads'
+        if os.path.isfile(os.path.join(path_down,'selected.xls')):
+            selected=os.path.join(path_down,'selected.xls')
+            df=pd.read_excel(selected)
+            logging.info("downloaded selected has been read for office"+office_text+"in"+region)
+            new_df3["vehicle_class"]=df.iloc[:,1]
+            new_df3["total"]=df.iloc[:,2]
+            os.remove(selected)
+            logging.info("selected removed for "+office_text+region)
+        elif(os.path.isfile(os.path.join(path_down,'tacPendingForApproval.xls'))):
+            new_df3["vehicle_class"]=pd.Series([""])
+            new_df3["total"]=pd.Series([""])
+            selected=os.path.join(path_down,'tacPendingForApproval.xls')
+            os.remove(selected)
+            logging.info("tacPendingForApproval removed for "+office_text+region)
+        new_df3["begining_date"]=start_day_month
+        new_df3["end_date"]=end_date
+        new_df3["region"]=region
+        new_df3["office"]=office_text
+    except Exception as e:
+        logging.info(str(format_exc()))
+    return new_df3
+
+def get_offices(new_df2,array,start_month,last_day,region):
     offices_btn = driver.find_elements_by_class_name("ui-selectonemenu-trigger")
     offices_btn[2].click() #click on office #todo
     time.sleep(0.5)
@@ -191,11 +219,15 @@ def get_offices(array,start_month,last_day,region):
         driver.find_element_by_xpath("//li[@id='datatable_rtoWise:dropdown2_2']").click()#"Class Wise"
         wait_for_loading(driver)
         # Run through pages
-        array=save_pagination_data(array,start_month,last_day,region,office_text)
-    return array
+        df_state=read_delete_xls(start_month,last_day,region,office_text)
+        new_df2.append(df_state,ignore_index=True)
+        pdb.set_trace()
+        #array=save_pagination_data(array,start_month,last_day,region,office_text)
+    return new_df2
 
 def main():
     try:
+        new_df=pd.DataFrame(columns=['begining_date', 'end_date','region','office','vehicle_class','total'])
         (start_date,end_date)=get_date_range()
         start_date=datetime.strptime(start_date,"%Y-%m-%d")
         end_date=datetime.strptime(end_date,"%Y-%m-%d")
@@ -205,6 +237,7 @@ def main():
         # end_month=date(year=2019,month=3,day=1) #remove after use
         driver = init_webdriver()
         array = [] # Array to store data to CSV
+        # df = pd.DataFrame( columns = ['begining_date', 'end_date', 'region', 'type_of_vehicle','num_sold', 'office'])
         while(start_day_month <= end_month):
             last_day_month = date(year=start_day_month.year, month=start_day_month.month, day=(monthrange(start_day_month.year, start_day_month.month)[1]))
             driver.get(P_URL)
@@ -231,10 +264,10 @@ def main():
                 time.sleep(0.5)
                 wait_for_loading(driver)
                 # --- GET OFFICES
-                array=get_offices(array,start_day_month,last_day_month,region_name)
+                array=get_offices(new_df,array,start_day_month,last_day_month,region_name)
                 logging.info("normal output is \n ",array)
-                df = pd.DataFrame(array, columns = ['begining_date', 'end_date', 'region', 'type_of_vehicle','num_sold', 'office'])
-                df.to_csv(f'{region_name}_{start_day_month}_{last_day_month}.csv', index=None)
+                # df = pd.DataFrame(array, columns = ['begining_date', 'end_date', 'region', 'type_of_vehicle','num_sold', 'office'])
+                array.to_excel(f'{start_day_month}_{last_day_month}.xlsx', index=False,sheet_name=region_name)
             if start_day_month.month == 12:
                 start_day_month = date(year=start_day_month.year+1, month=1, day=1)
             else:
