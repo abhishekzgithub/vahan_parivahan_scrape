@@ -15,25 +15,12 @@ from pandas import ExcelWriter
 from traceback import format_exc
 from selenium.common.exceptions import NoSuchElementException
 import logging
-LOG_FORMAT = "[%(asctime)s]-{%(pathname)s:%(lineno)d}-{%(levelname)s}-{In file ->%(module)s " \
-             "In function ->%(funcName)s}-{%(message)s}"
+from helper import *
+from change_this import *
 logging.basicConfig(filename='output.log',level=logging.INFO,format=LOG_FORMAT)
-DRIVER_PATH=r'C:\\Users\\abhis11x\\Music\\bookmarks\\program\\chromedriver_win32\\chromedriver.exe'
-#os.path.join(os.getcwd(),'chromedriver_win32','chromedriver.exe')
-SHORT_TIMEOUT = 5   # give enough time for the loading element to appear
-LONG_TIMEOUT = 30  # give enough time for loading to finish
-LOADING_ELEMENT_XPATH = '//*[@id="j_idt44_modal"]'
-FROM_DATE="//input[@id='id_fromDate_input']"
-UPTO_DATE="//input[@id='id_uptoDate_input']"
-path_down=r'C:\Users\abhis11x\Downloads'
-#python scrape_vahan.py -f 2009-12-01 -t 2010-02-01
-
-all_regions = ['Total', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Chandigarh', 'Daman & Diu', 'Delhi', 'Dadra & Nagar Haveli', 'Goa', 'Gujarat', 'Himachal Pradesh', 'Haryana', 'Jharkhand', 'Jammu & Kashmir','Karnataka', 'Kerala', 'Maharashtra', 'Meghalaya', 'Manipur', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Puducherry', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Tripura', 'Uttrakhand', 'Uttar Pradesh', 'West Bengal']
 start_region=1
 end_region=len(all_regions)-1
-P_URL="https://vahan.parivahan.gov.in/vahan4dashboard/"
 driver=None
-
 def init_webdriver():
     global driver
     # --- Options to make scraping faster
@@ -70,7 +57,9 @@ def get_date_range():
         )
     args = parser.parse_args()
     print (args.from_date)
+    logging.info("from date"+str(args.from_date))
     print (args.to_date)
+    logging.info("To date"+str(args.to_date))
     start_date = args.from_date
     end_date = args.to_date
     return (start_date,end_date)
@@ -135,7 +124,6 @@ def save_pagination_data(array,start_month,last_day,region,office_text):
         time.sleep(0.5)
         #array creating start
         array=get_first_page(array,start_month,last_day,region,office_text)
-        #elem_pno = driver.find_elements_by_class_name("ui-paginator-page")
         for page_num in range(1, len(elem_pno)+1):#from page 1 and onwards
             driver.find_elements_by_class_name("ui-icon-seek-next")[0].click()
             wait_for_loading(driver)
@@ -217,6 +205,7 @@ def get_offices(new_df2,array,start_month,last_day,region):
                 offices_btn = driver.find_elements_by_class_name("ui-selectonemenu-trigger")
                 offices_btn[2].click() #click on office #todo
         print(" *** In office : ", office_text)
+        logging.info(" *** In office : "+str(office_text))
         #wait_for_loading(driver)
         # j_idt54
         driver.find_element_by_xpath("//a[@id='j_idt54']").click() #click on vehicle registration "more info"
@@ -229,7 +218,6 @@ def get_offices(new_df2,array,start_month,last_day,region):
         df_state=read_delete_xls(start_month,last_day,region,office_text)
         new_df2=new_df2.append(df_state,ignore_index=True)
         del(df_state)
-        #array=save_pagination_data(array,start_month,last_day,region,office_text)
     return new_df2
 
 def main():
@@ -238,13 +226,10 @@ def main():
         (start_date,end_date)=get_date_range()
         start_date=datetime.strptime(start_date,"%Y-%m-%d")
         end_date=datetime.strptime(end_date,"%Y-%m-%d")
-        start_day_month = date(year=start_date.year, month=start_date.month, day=1) #todo
-        end_month = date(year=end_date.year, month=end_date.month, day=1) #todo
-        # start_day_month=date(year=2019,month=1,day=1) #remove after use
-        # end_month=date(year=2019,month=3,day=1) #remove after use
+        start_day_month = date(year=start_date.year, month=start_date.month, day=1)
+        end_month = date(year=end_date.year, month=end_date.month, day=1)
         driver = init_webdriver()
         array = [] # Array to store data to CSV
-        # df = pd.DataFrame( columns = ['begining_date', 'end_date', 'region', 'type_of_vehicle','num_sold', 'office'])
         while(start_day_month <= end_month):
             last_day_month = date(year=start_day_month.year, month=start_day_month.month, day=(monthrange(start_day_month.year, start_day_month.month)[1]))
             writer = pd.ExcelWriter(f'{start_day_month}_{last_day_month}.xlsx', engine='xlsxwriter')
@@ -256,9 +241,11 @@ def main():
             wait_for_loading(driver)
             set_date(FROM_DATE,start_day_month)
             print("set_date1 done")
+            logging.info("set_date1 done")
             wait_for_loading(driver)
             set_date(UPTO_DATE,last_day_month)
             print("set_date2 done")
+            logging.info("set_date1 done")
             wait_for_loading(driver)
             # check if j_idt44_modal exists on the page. this is the loading gif
             # Run through the STATES
@@ -274,8 +261,6 @@ def main():
                 # --- GET OFFICES
                 array=get_offices(new_df,array,start_day_month,last_day_month,region_name)
                 logging.info("process done for "+start_day_month+last_day_month+region_name)
-                #pdb.set_trace()
-                # df = pd.DataFrame(array, columns = ['begining_date', 'end_date', 'region', 'type_of_vehicle','num_sold', 'office'])
                 array.to_excel(writer, index=False,sheet_name=region_name)
             writer.save()
             if start_day_month.month == 12:
@@ -285,7 +270,6 @@ def main():
     except:
         logging.info(format_exc())
         logging.info("except output is \n"+str(array))
-        #df = pd.DataFrame(array, columns = ['begining_date', 'end_date', 'region', 'type_of_vehicle','num_sold', 'office'])
         array.to_csv(f'{region_name}_{start_day_month}_{last_day_month}_except.csv', index=None)
     finally:
         logging.info("----------------------------------done------------------------------")
