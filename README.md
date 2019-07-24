@@ -28,9 +28,10 @@ This is a scraping script made in order to scrape the data from the vehicle regi
     * > pip install pipenv
     * > pipenv shell
     * > pipenv install
- 5. After the above operations has been working fine, run the below command to start scraping the data from the **start** which is after **-f** and **end date** which is after **-t**
+ 5. Make sure to change the **folder location** inside the **change_this.py** file. 
+ 6. After the above operations has been working fine, run the below command to start scraping the data from the **start** which is after **-f** and **end date** which is after **-t**
     * > python scrape_vahan.py -f 2009-12-01 -t 2010-02-01
- 6. The results will be downloaded in the same folder where the code is in an excel format.
+ 7. The results will be downloaded in the same folder where the code is in an excel format.
  
  ## Thanks
  Please give star if you are using or like it.
