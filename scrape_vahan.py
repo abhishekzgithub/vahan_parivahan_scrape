@@ -260,7 +260,7 @@ def main():
                 wait_for_loading(driver)
                 # --- GET OFFICES
                 array=get_offices(new_df,array,start_day_month,last_day_month,region_name)
-                logging.info("process done for "+start_day_month+last_day_month+region_name)
+                logging.info("process done for "+str(start_day_month)+str(last_day_month)+region_name)
                 array.to_excel(writer, index=False,sheet_name=region_name)
             writer.save()
             if start_day_month.month == 12:
