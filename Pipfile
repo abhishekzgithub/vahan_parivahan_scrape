@@ -9,6 +9,7 @@ verify_ssl = true
 selenium = "*"
 pandas = "*"
 xlsxwriter = "*"
+xlrd="*"
 
 [requires]
 python_version = "3.6"

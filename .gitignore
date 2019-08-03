@@ -2,3 +2,5 @@
 *.log
 *.vscode
 *.xlsx
+
+\__pycache__
