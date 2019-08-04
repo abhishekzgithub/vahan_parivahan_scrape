@@ -5,7 +5,8 @@ This file is for the user if there is a different work directory
 #This is the selenium driver path
 DRIVER_PATH='chromedriver.exe'
 #Below one is the download folder.
-path_down=r'C:\Users\abhis11x\Downloads'
+import os
+path_down=os.path.join(os.getenv('USERPROFILE'), 'Downloads')
 
 #Below is the list of all regions
 all_regions = ['Total', 'Arunachal Pradesh', 'Assam', 'Bihar',
