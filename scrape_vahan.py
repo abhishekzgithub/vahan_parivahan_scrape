@@ -262,6 +262,7 @@ def main():
                 array=get_offices(new_df,array,start_day_month,last_day_month,region_name)
                 logging.info("process done for "+str(start_day_month)+str(last_day_month)+region_name)
                 array.to_excel(writer, index=False,sheet_name=region_name)
+                array.to_csv(f'{region_name}_{start_day_month}_{last_day_month}_bkup.csv', index=None)
             writer.save()
             if start_day_month.month == 12:
                 start_day_month = date(year=start_day_month.year+1, month=1, day=1)
